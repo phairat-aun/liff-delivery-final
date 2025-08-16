@@ -115,6 +115,7 @@
 
             async function main() {
                 try {
+                    // --- LIFF ID updated as requested ---
                     await liff.init({ liffId: "2007930661-Meaz8v4l" });
                     if (!liff.isInClient()) {
                         loadingEl.innerHTML = `<p class="text-red-500">กรุณาเปิดในแอปพลิเคชัน LINE</p>`;
@@ -204,16 +205,16 @@
                 }
             });
 
-            // --- UPDATED CODE FOR DEBUGGING ---
+            // --- CORRECTED FUNCTION ---
             getLocationBtn.addEventListener('click', async () => {
                 try {
-                    const location = await liff.getLocation();
-                    locationData = location;
+                    // Using the correct function name: liff.getGeolocation()
+                    const location = await liff.getGeolocation();
+                    locationData = location.coords; // The coordinates are inside the 'coords' object
                     locationStatus.classList.remove('hidden');
                     getLocationBtn.classList.add('hidden');
                 } catch (error) {
                     console.error(error);
-                    // Provide a more detailed error message
                     let errorMessage = 'ไม่สามารถดึงตำแหน่งได้\n\n';
                     if (error.code) {
                         errorMessage += `สาเหตุ: ${error.code}`;
