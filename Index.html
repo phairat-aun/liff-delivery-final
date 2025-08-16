@@ -53,7 +53,6 @@
         <div class="modal-content text-center">
             <h2 class="text-2xl font-bold mb-4">ชำระเงิน</h2>
             <p class="mb-4">สแกน QR Code เพื่อชำระเงิน</p>
-            <!-- TODO: ใส่ URL ของรูปภาพ QR Code ร้านค้าของคุณที่นี่ -->
             <img src="https://i.imgur.com/g2344zB.png" alt="QR Code" class="mx-auto mb-4 border rounded-lg">
             <p class="font-bold text-lg mb-4">ยอดชำระ: <span id="payment-total"></span> บาท</p>
             <input type="file" id="slip-upload" class="hidden" accept="image/*">
@@ -78,8 +77,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- State Variables ---
-            // TODO: แก้ไขข้อมูลเมนูและใส่ Direct Link ของรูปภาพจาก Imgur ที่นี่
             const menuItems = [
                 { id: 1, name: "กะเพราหมูกรอบ", price: 60, image: "https://i.imgur.com/J8Yf4zL.jpeg" },
                 { id: 2, name: "ข้าวผัดปู", price: 70, image: "https://i.imgur.com/S21eWzG.jpeg" },
@@ -102,24 +99,20 @@
             const cartItemsEl = document.getElementById('cart-items');
             const totalPriceEl = document.getElementById('total-price');
             const confirmOrderBtn = document.getElementById('confirmOrderBtn');
-            
             const paymentModal = document.getElementById('payment-modal');
             const codBtn = document.getElementById('cod-btn');
             const bankTransferBtn = document.getElementById('bank-transfer-btn');
-
             const bankTransferModal = document.getElementById('bank-transfer-modal');
             const paymentTotalEl = document.getElementById('payment-total');
             const slipUploadInput = document.getElementById('slip-upload');
             const slipPreviewContainer = document.getElementById('slip-preview-container');
             const slipPreviewImg = document.getElementById('slip-preview');
-
             const addressModal = document.getElementById('address-modal');
             const getLocationBtn = document.getElementById('get-location-btn');
             const locationStatus = document.getElementById('location-status');
             const addressDetailsInput = document.getElementById('address-details');
             const submitFinalOrderBtn = document.getElementById('submit-final-order-btn');
 
-            // --- Main Initialization ---
             async function main() {
                 try {
                     await liff.init({ liffId: "2007930661-Meaz8v4l" });
@@ -143,11 +136,8 @@
                 }
             }
 
-            // --- UI Rendering Functions ---
             function renderMenu() { menuListEl.innerHTML='';menuItems.forEach(i=>{const e=document.createElement('div');e.className='card flex items-center p-3 space-x-4',e.innerHTML=`<img src="${i.image}" alt="${i.name}" class="w-20 h-20 rounded-lg object-cover"><div class="flex-grow"><h3 class="font-bold text-lg">${i.name}</h3><p class="text-gray-600">฿${i.price}</p></div><button class="btn-add" data-id="${i.id}"><i class="fas fa-plus mr-1"></i>เพิ่ม</button>`,menuListEl.appendChild(e)})}
             function renderCart() { cartItemsEl.innerHTML='';let t=0,e=0;const n=cart.reduce((i,l)=>{i[l.id]||(i[l.id]={...l,quantity:0}),i[l.id].quantity++;return i},{});0===Object.keys(n).length?(cartItemsEl.innerHTML='<p class="text-center text-gray-500">ยังไม่มีสินค้าในตะกร้า</p>',confirmOrderBtn.disabled=!0):(confirmOrderBtn.disabled=!1,Object.values(n).forEach(i=>{const l=document.createElement('div');l.className='flex justify-between items-center',l.innerHTML=`<div><span class="font-semibold">${i.name}</span><span class="text-gray-500 text-sm"> x${i.quantity}</span></div><span class="font-semibold">฿${i.price*i.quantity}</span>`,cartItemsEl.appendChild(l)})),cart.forEach(i=>{t+=i.price,e++}),totalPriceEl.textContent=`฿${t}`,paymentTotalEl.textContent=t,cartBadge.textContent=e,cartBadge.classList.toggle('hidden',0===e)}
-
-            // --- App Flow Functions ---
             function showAddressModal() {
                 paymentModal.classList.add('hidden');
                 bankTransferModal.classList.add('hidden');
@@ -164,7 +154,6 @@
                     alert('กรุณากรอกรายละเอียดที่อยู่ครับ');
                     return;
                 }
-
                 let messageText = "🔔 ออเดอร์ใหม่ครับ\n\n--- รายการอาหาร ---\n";
                 let totalPrice = 0;
                 const groupedCart = cart.reduce((acc, item) => { if (!acc[item.id]) { acc[item.id] = { ...item, quantity: 0 }; } acc[item.id].quantity++; return acc; }, {});
@@ -172,9 +161,7 @@
                 messageText += `\nยอดรวม: ${totalPrice} บาท`;
                 messageText += `\nวิธีชำระเงิน: ${paymentMethod}`;
                 messageText += `\n\n--- ที่อยู่จัดส่ง ---\n${addressDetails}`;
-                
                 const locationMessage = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
-                
                 try {
                     await liff.sendMessages([
                         { type: 'text', text: messageText },
@@ -188,27 +175,22 @@
                 }
             }
 
-            // --- Event Listeners ---
             menuListEl.addEventListener('click', (e) => { const btn = e.target.closest('.btn-add'); if(btn) { const itemId = btn.dataset.id; const selectedItem = menuItems.find(item => item.id == itemId); cart.push(selectedItem); renderCart(); }});
             cartBtn.addEventListener('click', () => { if (cart.length > 0) orderSummaryEl.classList.remove('hidden'); else alert('กรุณาเลือกเมนูอาหารก่อนครับ'); });
             closeCartBtn.addEventListener('click', () => { orderSummaryEl.classList.add('hidden'); });
-            
             confirmOrderBtn.addEventListener('click', () => {
                 orderSummaryEl.classList.add('hidden');
                 paymentModal.classList.remove('hidden');
             });
-
             codBtn.addEventListener('click', () => {
                 paymentMethod = 'ชำระเงินปลายทาง';
                 showAddressModal();
             });
-
             bankTransferBtn.addEventListener('click', () => {
                 paymentMethod = 'โอนผ่านแอปธนาคาร';
                 paymentModal.classList.add('hidden');
                 bankTransferModal.classList.remove('hidden');
             });
-
             slipUploadInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -216,16 +198,13 @@
                     reader.onload = (event) => {
                         slipPreviewImg.src = event.target.result;
                         slipPreviewContainer.classList.remove('hidden');
-                        
-                        // NEW: Go to address modal immediately after uploading slip
-                        setTimeout(() => {
-                            showAddressModal();
-                        }, 500); // Add a small delay to let user see the preview
+                        setTimeout(() => { showAddressModal(); }, 500);
                     };
                     reader.readAsDataURL(file);
                 }
             });
 
+            // --- UPDATED CODE FOR DEBUGGING ---
             getLocationBtn.addEventListener('click', async () => {
                 try {
                     const location = await liff.getLocation();
@@ -234,13 +213,18 @@
                     getLocationBtn.classList.add('hidden');
                 } catch (error) {
                     console.error(error);
-                    alert('ไม่สามารถดึงตำแหน่งได้ กรุณาตรวจสอบการตั้งค่าอนุญาตในแอป LINE');
+                    // Provide a more detailed error message
+                    let errorMessage = 'ไม่สามารถดึงตำแหน่งได้\n\n';
+                    if (error.code) {
+                        errorMessage += `สาเหตุ: ${error.code}`;
+                    } else {
+                        errorMessage += `สาเหตุ: ${error.message}`;
+                    }
+                    alert(errorMessage);
                 }
             });
 
             submitFinalOrderBtn.addEventListener('click', submitFinalOrder);
-
-            // --- Initialize App ---
             main();
         });
     </script>
