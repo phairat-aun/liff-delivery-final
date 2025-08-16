@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- LeafletJS (Free Map Library) -->
+    <!-- LeafletJS for Interactive Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -17,30 +17,29 @@
         .btn-secondary { background-color: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 1.5rem; border-radius: 1rem; width: 90%; max-width: 400px; }
-        #map { height: 280px; width: 100%; border-radius: 0.75rem; border: 1px solid #e5e7eb; }
+        #map { height: 280px; border-radius: 0.75rem; border: 1px solid #e5e7eb; }
     </style>
 </head>
 <body class="bg-gray-50">
-
+    <!-- Loading, App Header, Menu, Cart, Order Summary are the same -->
     <div id="loading" class="flex items-center justify-center h-screen"><div class="text-center"><i class="fas fa-spinner fa-spin text-4xl text-orange-500"></i><p class="mt-2 text-gray-600">กำลังโหลด...</p></div></div>
     <div id="app" class="hidden max-w-lg mx-auto pb-24">
-        <!-- Header, Menu, Cart, Order Summary sections -->
         <div class="p-4 bg-white shadow-md sticky top-0 z-10"><div class="flex items-center space-x-4"><img id="userPicture" class="w-12 h-12 rounded-full border-2 border-orange-400" src="https://placehold.co/100x100/EFEFEF/AAAAAA?text=User" alt="User Profile Picture"><div><p class="text-gray-600 text-sm">สวัสดีครับ</p><h1 id="userName" class="text-lg font-bold text-gray-800">...</h1></div></div></div>
         <div class="p-4"><h2 class="text-2xl font-bold text-gray-800 mb-4">เมนูร้าน</h2><div id="menu-list" class="space-y-4"></div></div>
         <div class="fixed bottom-4 right-4"><button id="cartBtn" class="relative bg-orange-500 text-white p-4 rounded-full shadow-lg"><i class="fas fa-shopping-cart text-2xl"></i><span id="cart-badge" class="hidden absolute top-[-5px] right-[-10px] bg-red-500 text-white rounded-full w-6 h-6 text-sm flex items-center justify-center font-bold">0</span></button></div>
         <div id="order-summary" class="hidden fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl max-w-lg mx-auto"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">รายการสั่งซื้อ</h2><button id="closeCartBtn"><i class="fas fa-times text-gray-500"></i></button></div><div id="cart-items" class="max-h-40 overflow-y-auto mb-4 space-y-2"></div><div class="flex justify-between items-center font-bold text-lg border-t pt-4"><span>ยอดรวม:</span><span id="total-price">฿0</span></div><button id="confirmOrderBtn" class="w-full btn-primary mt-4" disabled><i class="fas fa-arrow-right mr-2"></i>ไปที่หน้าชำระเงิน</button></div>
     </div>
 
-    <!-- Modals (Payment, Bank Transfer) -->
+    <!-- Modals (Payment, Bank Transfer) are the same -->
     <div id="payment-modal" class="modal-overlay hidden"><div class="modal-content text-center"><h2 class="text-2xl font-bold mb-6">เลือกวิธีชำระเงิน</h2><div class="space-y-4"><button id="cod-btn" class="w-full btn-primary btn-secondary"><i class="fas fa-hand-holding-usd mr-2"></i>ชำระเงินปลายทาง</button><button id="bank-transfer-btn" class="w-full btn-primary"><i class="fas fa-qrcode mr-2"></i>โอนผ่านแอปธนาคาร</button></div></div></div>
     <div id="bank-transfer-modal" class="modal-overlay hidden"><div class="modal-content text-center"><h2 class="text-2xl font-bold mb-4">ชำระเงิน</h2><p class="mb-4">สแกน QR Code เพื่อชำระเงิน</p><img src="https://i.imgur.com/g2344zB.png" alt="QR Code" class="mx-auto mb-4 border rounded-lg"><p class="font-bold text-lg mb-4">ยอดชำระ: <span id="payment-total"></span> บาท</p><input type="file" id="slip-upload" class="hidden" accept="image/*"><button onclick="document.getElementById('slip-upload').click()" class="w-full btn-primary"><i class="fas fa-upload mr-2"></i>แนบสลิปเพื่อไปขั้นตอนถัดไป</button><div id="slip-preview-container" class="hidden mt-4 text-left"><p class="font-semibold">สลิปที่แนบ:</p><img id="slip-preview" class="mx-auto max-h-40 rounded mt-2"></div></div></div>
     
-    <!-- Address Modal with LeafletJS Map -->
+    <!-- FINAL VERSION: Address Modal with Manual Map -->
     <div id="address-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-4 text-center">ปักหมุดที่อยู่จัดส่ง</h2>
+            <h2 class="text-2xl font-bold mb-2 text-center">ปักหมุดที่อยู่จัดส่ง</h2>
+            <p class="text-center text-gray-600 mb-4">เลื่อนแผนที่และลากหมุดเพื่อระบุตำแหน่ง</p>
             <div id="map" class="mb-4"></div>
-            <button id="find-me-btn" class="w-full btn-primary btn-secondary mb-4"><i class="fas fa-location-arrow mr-2"></i>หาตำแหน่งปัจจุบันของฉัน</button>
             <div>
                 <label for="address-details" class="block font-medium">บ้านเลขที่ / ซอย / รายละเอียดเพิ่มเติม</label>
                 <textarea id="address-details" rows="3" class="w-full border border-gray-300 p-2 rounded-md" placeholder="เช่น บ้านเลขที่ 123 หมู่ 4 ซอย 5"></textarea>
@@ -60,10 +59,11 @@
             ];
             let cart = [], paymentMethod = '', locationData = null;
             let map, marker; // Map variables
-            const loadingEl=document.getElementById('loading'),appEl=document.getElementById('app'),menuListEl=document.getElementById('menu-list'),cartBtn=document.getElementById('cartBtn'),closeCartBtn=document.getElementById('closeCartBtn'),orderSummaryEl=document.getElementById('order-summary'),cartBadge=document.getElementById('cart-badge'),cartItemsEl=document.getElementById('cart-items'),totalPriceEl=document.getElementById('total-price'),confirmOrderBtn=document.getElementById('confirmOrderBtn'),paymentModal=document.getElementById('payment-modal'),codBtn=document.getElementById('cod-btn'),bankTransferBtn=document.getElementById('bank-transfer-btn'),bankTransferModal=document.getElementById('bank-transfer-modal'),paymentTotalEl=document.getElementById('payment-total'),slipUploadInput=document.getElementById('slip-upload'),slipPreviewContainer=document.getElementById('slip-preview-container'),slipPreviewImg=document.getElementById('slip-preview'),addressModal=document.getElementById('address-modal'),findMeBtn=document.getElementById('find-me-btn'),addressDetailsInput=document.getElementById('address-details'),submitFinalOrderBtn=document.getElementById('submit-final-order-btn');
+            const loadingEl=document.getElementById('loading'),appEl=document.getElementById('app'),menuListEl=document.getElementById('menu-list'),cartBtn=document.getElementById('cartBtn'),closeCartBtn=document.getElementById('closeCartBtn'),orderSummaryEl=document.getElementById('order-summary'),cartBadge=document.getElementById('cart-badge'),cartItemsEl=document.getElementById('cart-items'),totalPriceEl=document.getElementById('total-price'),confirmOrderBtn=document.getElementById('confirmOrderBtn'),paymentModal=document.getElementById('payment-modal'),codBtn=document.getElementById('cod-btn'),bankTransferBtn=document.getElementById('bank-transfer-btn'),bankTransferModal=document.getElementById('bank-transfer-modal'),paymentTotalEl=document.getElementById('payment-total'),slipUploadInput=document.getElementById('slip-upload'),slipPreviewContainer=document.getElementById('slip-preview-container'),slipPreviewImg=document.getElementById('slip-preview'),addressModal=document.getElementById('address-modal'),addressDetailsInput=document.getElementById('address-details'),submitFinalOrderBtn=document.getElementById('submit-final-order-btn');
 
             async function main() {
                 try {
+                    // Using your latest LIFF ID
                     await liff.init({ liffId: "2007930661-rxWdznRY" });
                     if (!liff.isInClient()) { loadingEl.innerHTML = `<p class="text-red-500">กรุณาเปิดในแอป LINE</p>`; return; }
                     if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -82,9 +82,7 @@
                 if (map) { map.invalidateSize(); return; }
                 const initialCoords = [13.7563, 100.5018]; // Default to Bangkok
                 map = L.map('map').setView(initialCoords, 15);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                 marker = L.marker(initialCoords, { draggable: true }).addTo(map);
                 
                 marker.on('dragend', function(event) {
@@ -129,20 +127,6 @@
             codBtn.addEventListener('click', () => { paymentMethod = 'ชำระเงินปลายทาง'; showAddressModal(); });
             bankTransferBtn.addEventListener('click', () => { paymentMethod = 'โอนผ่านแอปธนาคาร'; paymentModal.classList.add('hidden'); bankTransferModal.classList.remove('hidden'); });
             slipUploadInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { slipPreviewImg.src = event.target.result; slipPreviewContainer.classList.remove('hidden'); setTimeout(() => { showAddressModal(); }, 500); }; reader.readAsDataURL(file); } });
-            
-            findMeBtn.addEventListener('click', async () => {
-                try {
-                    const location = await liff.getGeolocation();
-                    const coords = { lat: location.coords.latitude, lng: location.coords.longitude };
-                    locationData = { latitude: coords.lat, longitude: coords.lng };
-                    map.setView(coords, 17);
-                    marker.setLatLng(coords);
-                } catch (error) {
-                    console.error(error);
-                    alert(`ไม่สามารถหาตำแหน่งอัตโนมัติได้ กรุณาปักหมุดด้วยตนเอง\n\nสาเหตุ: ${error.code || error.message}`);
-                }
-            });
-
             submitFinalOrderBtn.addEventListener('click', submitFinalOrder);
             main();
         });
