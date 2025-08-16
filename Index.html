@@ -60,7 +60,7 @@
 
             async function main() {
                 try {
-                    await liff.init({ liffId: "2007930661-Meaz8v4l" });
+                    await liff.init({ liffId: "2007930661-rxWdznRY" });
                     if (!liff.isInClient()) { loadingEl.innerHTML = `<p class="text-red-500">กรุณาเปิดในแอปพลิเคชัน LINE</p>`; return; }
                     if (!liff.isLoggedIn()) { liff.login(); return; }
                     const profile = await liff.getProfile();
@@ -116,3 +116,4 @@
     </script>
 </body>
 </html>
+
