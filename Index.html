@@ -64,7 +64,7 @@
                 <span id="total-price">฿0</span>
             </div>
             <button id="confirmOrderBtn" class="w-full btn-primary mt-4" disabled>
-                <i class="fas fa-paper-plane mr-2"></i>ส่งออเดอร์เข้าร้าน
+                <i class="fas fa-share-square mr-2"></i>แชร์ออเดอร์ให้ร้านค้า
             </button>
         </div>
     </div>
@@ -92,7 +92,7 @@
 
             async function main() {
                 try {
-                    await liff.init({ liffId: "2007930661-v85jNpQb" }); 
+                    await liff.init({ liffId: "2007930661-Meaz8v4l" }); 
                     
                     if (!liff.isInClient()) {
                         loadingEl.innerHTML = `<p class="text-red-500">กรุณาเปิดในแอปพลิเคชัน LINE</p>`;
@@ -157,8 +157,14 @@
                 cartBadge.classList.toggle('hidden', totalItems === 0);
             }
 
+            // UPDATED: This function now uses shareTargetPicker
             async function sendOrder() {
                 if (cart.length === 0) return;
+
+                if (!liff.isApiAvailable('shareTargetPicker')) {
+                    alert("ฟังก์ชันแชร์ไม่พร้อมใช้งานในเวอร์ชัน LINE ของคุณ กรุณาอัปเดตแอป LINE");
+                    return;
+                }
 
                 // 1. Format the message
                 let messageText = "🔔 ออเดอร์ใหม่ครับ\n\n";
@@ -177,18 +183,23 @@
                 });
                 messageText += `\nยอดรวม: ${totalPrice} บาท`;
 
-                // 2. Send the message to the chat
+                // 2. Use Share Target Picker to let user send the message
                 try {
-                    await liff.sendMessages([{
+                    const result = await liff.shareTargetPicker([{
                         type: 'text',
                         text: messageText
                     }]);
-                    alert("ส่งออเดอร์สำเร็จ!");
-                    // 3. Close the LIFF window
-                    liff.closeWindow();
+                    
+                    if (result) {
+                        // User successfully shared the message
+                        liff.closeWindow();
+                    } else {
+                        // User cancelled the share operation
+                        console.log("Share Target Picker was cancelled by user");
+                    }
                 } catch (error) {
-                    console.error('Error sending message: ', error);
-                    alert("เกิดข้อผิดพลาดในการส่งออเดอร์");
+                    console.error('Error using shareTargetPicker: ', error);
+                    alert("เกิดข้อผิดพลาดในการแชร์ออเดอร์");
                 }
             }
 
