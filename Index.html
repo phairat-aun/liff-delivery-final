@@ -34,12 +34,12 @@
     <div id="payment-modal" class="modal-overlay hidden"><div class="modal-content text-center"><h2 class="text-2xl font-bold mb-6">เลือกวิธีชำระเงิน</h2><div class="space-y-4"><button id="cod-btn" class="w-full btn-primary btn-secondary"><i class="fas fa-hand-holding-usd mr-2"></i>ชำระเงินปลายทาง</button><button id="bank-transfer-btn" class="w-full btn-primary"><i class="fas fa-qrcode mr-2"></i>โอนผ่านแอปธนาคาร</button></div></div></div>
     <div id="bank-transfer-modal" class="modal-overlay hidden"><div class="modal-content text-center"><h2 class="text-2xl font-bold mb-4">ชำระเงิน</h2><p class="mb-4">สแกน QR Code เพื่อชำระเงิน</p><img src="https://i.imgur.com/g2344zB.png" alt="QR Code" class="mx-auto mb-4 border rounded-lg"><p class="font-bold text-lg mb-4">ยอดชำระ: <span id="payment-total"></span> บาท</p><input type="file" id="slip-upload" class="hidden" accept="image/*"><button onclick="document.getElementById('slip-upload').click()" class="w-full btn-primary"><i class="fas fa-upload mr-2"></i>แนบสลิปเพื่อไปขั้นตอนถัดไป</button><div id="slip-preview-container" class="hidden mt-4 text-left"><p class="font-semibold">สลิปที่แนบ:</p><img id="slip-preview" class="mx-auto max-h-40 rounded mt-2"></div></div></div>
     
-    <!-- FINAL VERSION: Address Modal with Manual Map -->
+    <!-- Address Modal with both automatic and manual options -->
     <div id="address-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-2 text-center">ปักหมุดที่อยู่จัดส่ง</h2>
-            <p class="text-center text-gray-600 mb-4">เลื่อนแผนที่และลากหมุดเพื่อระบุตำแหน่ง</p>
+            <h2 class="text-2xl font-bold mb-4 text-center">ปักหมุดที่อยู่จัดส่ง</h2>
             <div id="map" class="mb-4"></div>
+            <button id="find-me-btn" class="w-full btn-primary btn-secondary mb-4"><i class="fas fa-location-arrow mr-2"></i>หาตำแหน่งปัจจุบันของฉัน</button>
             <div>
                 <label for="address-details" class="block font-medium">บ้านเลขที่ / ซอย / รายละเอียดเพิ่มเติม</label>
                 <textarea id="address-details" rows="3" class="w-full border border-gray-300 p-2 rounded-md" placeholder="เช่น บ้านเลขที่ 123 หมู่ 4 ซอย 5"></textarea>
@@ -59,11 +59,10 @@
             ];
             let cart = [], paymentMethod = '', locationData = null;
             let map, marker; // Map variables
-            const loadingEl=document.getElementById('loading'),appEl=document.getElementById('app'),menuListEl=document.getElementById('menu-list'),cartBtn=document.getElementById('cartBtn'),closeCartBtn=document.getElementById('closeCartBtn'),orderSummaryEl=document.getElementById('order-summary'),cartBadge=document.getElementById('cart-badge'),cartItemsEl=document.getElementById('cart-items'),totalPriceEl=document.getElementById('total-price'),confirmOrderBtn=document.getElementById('confirmOrderBtn'),paymentModal=document.getElementById('payment-modal'),codBtn=document.getElementById('cod-btn'),bankTransferBtn=document.getElementById('bank-transfer-btn'),bankTransferModal=document.getElementById('bank-transfer-modal'),paymentTotalEl=document.getElementById('payment-total'),slipUploadInput=document.getElementById('slip-upload'),slipPreviewContainer=document.getElementById('slip-preview-container'),slipPreviewImg=document.getElementById('slip-preview'),addressModal=document.getElementById('address-modal'),addressDetailsInput=document.getElementById('address-details'),submitFinalOrderBtn=document.getElementById('submit-final-order-btn');
+            const loadingEl=document.getElementById('loading'),appEl=document.getElementById('app'),menuListEl=document.getElementById('menu-list'),cartBtn=document.getElementById('cartBtn'),closeCartBtn=document.getElementById('closeCartBtn'),orderSummaryEl=document.getElementById('order-summary'),cartBadge=document.getElementById('cart-badge'),cartItemsEl=document.getElementById('cart-items'),totalPriceEl=document.getElementById('total-price'),confirmOrderBtn=document.getElementById('confirmOrderBtn'),paymentModal=document.getElementById('payment-modal'),codBtn=document.getElementById('cod-btn'),bankTransferBtn=document.getElementById('bank-transfer-btn'),bankTransferModal=document.getElementById('bank-transfer-modal'),paymentTotalEl=document.getElementById('payment-total'),slipUploadInput=document.getElementById('slip-upload'),slipPreviewContainer=document.getElementById('slip-preview-container'),slipPreviewImg=document.getElementById('slip-preview'),addressModal=document.getElementById('address-modal'),findMeBtn=document.getElementById('find-me-btn'),addressDetailsInput=document.getElementById('address-details'),submitFinalOrderBtn=document.getElementById('submit-final-order-btn');
 
             async function main() {
                 try {
-                    // Using your latest LIFF ID
                     await liff.init({ liffId: "2007930661-rxWdznRY" });
                     if (!liff.isInClient()) { loadingEl.innerHTML = `<p class="text-red-500">กรุณาเปิดในแอป LINE</p>`; return; }
                     if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -127,6 +126,21 @@
             codBtn.addEventListener('click', () => { paymentMethod = 'ชำระเงินปลายทาง'; showAddressModal(); });
             bankTransferBtn.addEventListener('click', () => { paymentMethod = 'โอนผ่านแอปธนาคาร'; paymentModal.classList.add('hidden'); bankTransferModal.classList.remove('hidden'); });
             slipUploadInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { slipPreviewImg.src = event.target.result; slipPreviewContainer.classList.remove('hidden'); setTimeout(() => { showAddressModal(); }, 500); }; reader.readAsDataURL(file); } });
+            
+            // Event listener for the "Find Me" button (re-added)
+            findMeBtn.addEventListener('click', async () => {
+                try {
+                    const location = await liff.getGeolocation();
+                    const coords = { lat: location.coords.latitude, lng: location.coords.longitude };
+                    locationData = { latitude: coords.lat, longitude: coords.lng };
+                    map.setView(coords, 17); // Zoom in on the user's location
+                    marker.setLatLng(coords);
+                } catch (error) {
+                    console.error(error);
+                    alert(`ไม่สามารถหาตำแหน่งอัตโนมัติได้ กรุณาปักหมุดด้วยตนเอง\n\nสาเหตุ: ${error.code || error.message}`);
+                }
+            });
+
             submitFinalOrderBtn.addEventListener('click', submitFinalOrder);
             main();
         });
